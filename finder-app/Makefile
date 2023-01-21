@@ -1,9 +1,12 @@
-CC = $(CROSS_COMPILE)gcc
+all: writer
 
-writer:
-	$(CC) writer.c  -o writer
+writer.o: writer.c
+	$(CC) $(CCFLAGS) -c writer.c
+
+writer: writer.o
+	$(CC) $(LDFLAGS) writer.o -o writer
 
 clean:
-	rm -f writer
+	rm -f writer.o writer
 
 .PHONY: clean
