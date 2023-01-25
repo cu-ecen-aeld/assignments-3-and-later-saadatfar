@@ -1,10 +1,10 @@
 all: aesdsocket
 
-aesdsocket.o: aesdsocket.c
+aesdsocket.o: aesdsocket.c aesdsocket.h
 	$(CC) $(CCFLAGS) -c aesdsocket.c
 
 aesdsocket: aesdsocket.o
-	$(CC) $(LDFLAGS) aesdsocket.o -o aesdsocket
+	$(CC) $(LDFLAGS) -pthread aesdsocket.o -o aesdsocket
 
 run: aesdsocket
 	./aesdsocket
