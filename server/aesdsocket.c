@@ -167,6 +167,7 @@ static void *start_time_thread (void *arg) {
     CHECK(fclose(fp));
     CHECK(pthread_mutex_unlock(&mutex)!=0);
   }
+  return NULL;
 }
 
 int main(int argc, char *argv[]) {

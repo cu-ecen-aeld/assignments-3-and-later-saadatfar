@@ -1,10 +1,14 @@
+CC ?= $(CRPSS_COMPILE)gcc
+CFLAGS ?= -g -Wall -Werror
+LDFLAGS ?= -pthread -lrt
+
 all: aesdsocket
 
 aesdsocket.o: aesdsocket.c aesdsocket.h
-	$(CC) $(CCFLAGS) -c aesdsocket.c
+	$(CC) $(CFLAGS) -c aesdsocket.c
 
 aesdsocket: aesdsocket.o
-	$(CC) $(LDFLAGS) -pthread aesdsocket.o -o aesdsocket
+	$(CC) $(INCLUDES) $(LDFLAGS) aesdsocket.o -o aesdsocket
 
 run: aesdsocket
 	./aesdsocket
