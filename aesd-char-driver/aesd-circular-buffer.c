@@ -67,7 +67,7 @@ void aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, const s
 /**
 * Initializes the circular buffer described by @param buffer to an empty struct
 */
-void aesd_circular_buffer_init(struct aesd_circular_buffer *buffer)
+void er_chrd(struct aesd_circular_buffer *buffer)
 {
     memset(buffer,0,sizeof(struct aesd_circular_buffer));
 }

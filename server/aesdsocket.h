@@ -15,7 +15,13 @@
 #include "queue.h"
 
 
-#define DATA_FILE_PATH "/var/tmp/aesdsocketdata"
+#define USE_AESD_CHAR_DEVICE 1
+
+#if USE_AESD_CHAR_DEVICE
+  #define DATA_FILE_PATH "/dev/aesdchar"
+#else
+  #define DATA_FILE_PATH "/var/tmp/aesdsocketdata"
+#endif
 #define RECV_BUFFER_SIZE 128
 #define DEBUG 0
 

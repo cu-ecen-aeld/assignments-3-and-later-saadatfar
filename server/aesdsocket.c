@@ -2,7 +2,9 @@
 
 int sockfd;
 int sig_close = 0;
+#if !USE_AESD_CHAR_DEVICE
 pthread_t time_thread_id = 0;
+#endif
 pthread_mutex_t mutex;
 SLIST_HEAD(tlisthead, slist_data_s) head;
 
@@ -10,7 +12,9 @@ SLIST_HEAD(tlisthead, slist_data_s) head;
 void cleanup_close(int fd) {
   remove(DATA_FILE_PATH);
   CHECK(close(sockfd));
+  #if !USE_AESD_CHAR_DEVICE
   CHECK(pthread_join(time_thread_id, NULL));
+  #endif
 
   while (!SLIST_EMPTY(&head)) {
     slist_data_t *datap = SLIST_FIRST(&head);
@@ -136,6 +140,7 @@ static void *start_socket_thread (void *arg)
     return arg;
 }
 
+#if !USE_AESD_CHAR_DEVICE
 //Timer thread
 static void *start_time_thread (void *arg) {
   FILE *fp;
@@ -169,6 +174,7 @@ static void *start_time_thread (void *arg) {
   }
   return NULL;
 }
+#endif
 
 int main(int argc, char *argv[]) {
   //Open syslog file
@@ -228,8 +234,10 @@ int main(int argc, char *argv[]) {
 
   SLIST_INIT(&head);
 
+  #if !USE_AESD_CHAR_DEVICE
   // Create timer thread
   CHECK(pthread_create(&time_thread_id, NULL, start_time_thread, NULL));
+  #endif
 
   // Wait, accpet and handle connections
   while (1) {
