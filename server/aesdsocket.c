@@ -1,4 +1,5 @@
 #include "aesdsocket.h"
+#include "../aesd-char-driver/aesd_ioctl.h"
 
 int sockfd;
 int sig_close = 0;
@@ -59,25 +60,26 @@ void create_daemon() {
 // - Send the file
 void packet_complete(int sfd,char *buffer) {
   FILE *fp;
+  struct aesd_seekto seekto;
   CHECK(pthread_mutex_lock(&mutex));
   fp = fopen(DATA_FILE_PATH, "a+");
   if (fp == NULL){
     syslog(LOG_ERR, "Error on opening file: %s", strerror(errno));
     cleanup_close(EXIT_FAILURE);
   }
-  if (fprintf(fp, "%s\n", buffer) < 0) {
-    syslog(LOG_ERR, "Error on writing to file: %s", strerror(errno));
-    fclose(fp);
-    cleanup_close(EXIT_FAILURE);
+  if (sscanf(buffer, "AESDCHAR_IOCSEEKTO:%d,%d", &seekto.write_cmd, &seekto.write_cmd_offset) == 2) {
+    syslog(LOG_INFO, "Seeking to: %d,%d", seekto.write_cmd, seekto.write_cmd_offset);
+    CHECK(ioctl(fileno(fp), AESDCHAR_IOCSEEKTO, &seekto));
+  } else{
+    if (fprintf(fp, "%s\n", buffer) < 0) {
+      syslog(LOG_ERR, "Error on writing to file: %s", strerror(errno));
+      fclose(fp);
+      cleanup_close(EXIT_FAILURE);
+    }
+    rewind(fp);
+    //CHECK(fseek(fp,0,SEEK_SET));
   }
-  CHECK(fclose(fp));
   CHECK(pthread_mutex_unlock(&mutex));
-
-  fp = fopen(DATA_FILE_PATH, "r");
-  if (fp == NULL){
-    syslog(LOG_ERR, "Error on opening file: %s", strerror(errno));
-    cleanup_close(EXIT_FAILURE);
-  }
   
   char *line = NULL;
   size_t len = 0;
@@ -180,7 +182,6 @@ int main(int argc, char *argv[]) {
   //Open syslog file
   openlog("aesdsocket", LOG_PERROR * DEBUG, LOG_USER);
   
-  //Open syslog file
   // Register Signals
   struct sigaction saction;
   memset(&saction,0,sizeof(saction));

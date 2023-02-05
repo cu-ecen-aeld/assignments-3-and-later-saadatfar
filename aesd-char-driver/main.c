@@ -20,6 +20,8 @@
 #include <linux/slab.h>
 #include <linux/mutex.h>
 #include "aesdchar.h"
+#include "aesd_ioctl.h"
+
 int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
 
@@ -27,6 +29,41 @@ MODULE_AUTHOR("saadatfar");
 MODULE_LICENSE("Dual BSD/GPL");
 
 struct aesd_dev aesd_device;
+
+loff_t aesd_llseek(struct file *file, loff_t offset, int whence) {
+    struct aesd_buffer_entry *entry;
+    int i;
+    loff_t size;
+    size = 0;
+    AESD_CIRCULAR_BUFFER_FOREACH(entry,&aesd_device.buffer,i) {
+        size += entry->size;
+    }
+    return fixed_size_llseek(file, offset, whence, size);
+}
+
+long aesd_ioctl(struct file *file, unsigned int request, unsigned long arg) {
+    int retval, i, pos;
+    int res;
+    struct aesd_seekto seekto;
+    pos = 0;
+    switch (request)
+    {
+    case AESDCHAR_IOCSEEKTO:
+        res = __copy_from_user(&seekto, (const void __user *)arg, sizeof(struct aesd_seekto));
+        for (i=0;i<seekto.write_cmd;i++) {
+             pos += aesd_device.buffer.entry[aesd_device.buffer.out_offs + i].size;
+        }
+        pos += seekto.write_cmd_offset;
+        file->f_pos = pos;
+        retval = 0;
+        break;
+     
+     default:
+        retval = 0;
+        break;
+    }
+    return retval;
+}
 
 int aesd_open(struct inode *inode, struct file *filp)
 {
@@ -96,6 +133,8 @@ struct file_operations aesd_fops = {
     .write =    aesd_write,
     .open =     aesd_open,
     .release =  aesd_release,
+    .unlocked_ioctl = aesd_ioctl,
+    .llseek = aesd_llseek,
 };
 
 static int aesd_setup_cdev(struct aesd_dev *dev)
